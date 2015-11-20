@@ -278,11 +278,7 @@ struct RF24NetworkHeader
   * On Arduino, the message buffer is just a pointer, and can be pointed to any memory location.
   * On Linux the message buffer is a standard byte array, equal in size to the defined MAX_PAYLOAD_SIZE
   */
-  #if defined (RF24_LINUX)
-    uint8_t message_buffer[MAX_PAYLOAD_SIZE]; //< Array to store the message
-  #else    
-    uint8_t *message_buffer; //< Pointer to the buffer storing the actual message 
-  #endif
+   uint8_t message_buffer[MAX_PAYLOAD_SIZE]; //< Array to store the message
   /**
    * Default constructor
    *
@@ -310,18 +306,12 @@ struct RF24NetworkHeader
    *
    * Frames are used internally and by external systems. See RF24NetworkHeader.
    */
-#if defined (RF24_LINUX)   
   RF24NetworkFrame(RF24NetworkHeader& _header, const void* _message = NULL, uint16_t _len = 0) :
                   header(_header), message_size(_len) {
     if (_message && _len) {
       memcpy(message_buffer,_message,_len);
     }
   }
-#else  
-  RF24NetworkFrame(RF24NetworkHeader &_header, uint16_t _message_size):
-                  header(_header), message_size(_message_size){		  
-  }
-#endif  
 
 
   /**
@@ -703,28 +693,6 @@ public:
     std::queue<RF24NetworkFrame> external_queue;
   #endif
   
-  #if !defined ( DISABLE_FRAGMENTATION ) &&  !defined (RF24_LINUX)
-  /**
-  * **ARDUINO** <br>
-  * The frag_ptr is only used with Arduino (not RPi/Linux) and is mainly used for external data systems like RF24Ethernet. When
-  * an EXTERNAL_DATA payload type is received, and returned from network.update(), the frag_ptr will always point to the starting
-  * memory location of the received frame. <br>This is used by external data systems (RF24Ethernet) to immediately copy the received
-  * data to a buffer, without using the user-cache.
-  * 
-  * @see RF24NetworkFrame
-  * 
- * @code
- * uint8_t return_type = network.update();
- * if(return_type == EXTERNAL_DATA_TYPE){
- *     uint16_t size = network.frag_ptr->message_size;	
- *     memcpy(&myDataBuffer,network.frag_ptr->message_buffer,network.frag_ptr->message_size);
- * }		
- * @endcode  
-  * Linux devices (defined as RF24_LINUX) currently cache all payload types, and do not utilize frag_ptr. 
-  */
-  RF24NetworkFrame* frag_ptr;
-  #endif
-
   /**
   * Variable to determine whether update() will return after the radio buffers have been emptied (DEFAULT), or
   * whether to return immediately when (most) system types are received. 
@@ -794,7 +762,7 @@ public:
   uint16_t node_address; /**< Logical node address of this unit, 1 .. UINT_MAX */
   //const static int frame_size = 32; /**< How large is each frame over the air */
   uint8_t frame_size;
-  const static unsigned int max_frame_payload_size = MAX_FRAME_SIZE-sizeof(RF24NetworkHeader);
+  static const unsigned int max_frame_payload_size = MAX_FRAME_SIZE-sizeof(RF24NetworkHeader);
 
   #if defined (RF24_LINUX)
     std::queue<RF24NetworkFrame> frame_queue;

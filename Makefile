@@ -25,10 +25,7 @@ HEADER_DIR=${PREFIX}/include/RF24Network
 
 # Detect the Raspberry Pi from cpuinfo
 #Count the matches for BCM2708 or BCM2709 in cpuinfo
-RPI=$(shell cat /proc/cpuinfo | grep Hardware | grep -c BCM2708)
-ifneq "${RPI}" "1"
-RPI=$(shell cat /proc/cpuinfo | grep Hardware | grep -c BCM2709)
-endif
+RPI=1
 
 ifeq "$(RPI)" "1"
 # The recommended compiler flags for the Raspberry Pi
@@ -41,11 +38,11 @@ all: librf24network
 
 # Make the library
 librf24network: RF24Network.o
-	g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS} -o ${LIBNAME_RFN} $^ -lrf24-bcm
+	arm-linux-gnueabihf-g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS} -o ${LIBNAME_RFN} $^ -lrf24-bcm
 
 # Library parts
 RF24Network.o: RF24Network.cpp
-	g++ -Wall -fPIC ${CCFLAGS} -c $^
+	arm-linux-gnueabihf-g++ -Wall -fPIC ${CCFLAGS} -c $^
 
 # clear build files
 clean:
